@@ -1,0 +1,42 @@
+version: '2'
+services:
+  hugo:
+    image: jojomi/hugo
+    volumes:
+     - ./hugo_src:/src
+     - ./output/:/output
+    environment:
+     - HUGO_WATCH=True
+     - HUGO_THEME=hugo_theme_robust
+     - HUGO_BASEURL=localhost
+    command: ["/run.sh", "--appendPort=false"]
+
+  contentaggregator:
+    image: aretera/contentaggregator:next-sdk
+    volumes:
+     - .:/project
+     - ./hugo_src/content:/var/output
+     - ./hugo_src/static/images/:/var/images
+    ports:
+     - 5000:80
+    environment:
+     - spaceId=${spaceId}
+     - accessToken=${accessToken}
+
+  web:
+     image: jojomi/nginx-static
+     volumes:
+      - ./output:/var/www
+     environment:
+      - VIRTUAL_HOST=localhost
+     ports:
+      - 80:80
+     restart: always
+  ngrok:
+     image: wernight/ngrok
+     links: 
+      - contentaggregator
+     ports:
+      - 4040:4040
+     command: ["ngrok", "http", "contentaggregator:5000"]
+   
