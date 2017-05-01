@@ -22,6 +22,7 @@ pipelines:
   when: 
    - {binding: scheduler}
    - {binding: queue, topic: contentful_fetchupdates }
+   - {binding: queue, topic: contentful_fetchupdates_nextpage }
   from:
    - {type: module, module: contentful, function: fetchUpdates, spaceId: "${spaceId:-cfexampleapi}", accessToken: "${accessToken:-b4c0n73n7fu1}" }
   do: 

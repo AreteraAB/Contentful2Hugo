@@ -43,8 +43,8 @@ export async function fetchUpdates(event: Object, context: foopipes.ICallContext
     await foopipes.setValue(context, "content:ContentfulSyncToken", syncResponse.nextSyncToken);
 
     if (syncResponse.entries.length > 0 || syncResponse.assets.length > 0) {
-        await foopipes.publish(context, "contentful_fetchupdates", {});
-    } else {
+        await foopipes.publish(context, "contentful_fetchupdates_nextpage", {});
+    } else if(context.topic==='contentful_fetchupdates_nextpage'){
         await foopipes.publish(context, "contentful_all_content_fetched", {});        
     }
     return syncResponse;
