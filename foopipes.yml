@@ -19,79 +19,81 @@ pipelines:
  # Pipeline for scheduled polling of Contentful's Sync api 
  -
   id: poll_contentful
-  inputs: 
+  when: 
    - {binding: scheduler}
    - {binding: queue, topic: contentful_fetchupdates }
-  tasks: 
+  from:
    - {type: module, module: contentful, function: fetchUpdates, spaceId: "${spaceId:-cfexampleapi}", accessToken: "${accessToken:-b4c0n73n7fu1}" }
+  do: 
    - {type: select, path: "assets[*]", publish: contentful_asset, await: true, keepResult: false }
    - {type: select, path: "entries[*]" }
    - {type: module, module: contentful, function: createNewEntryPerLocale }
-  outputs: 
+  to: 
    - {type: store, binding: content, key: "#{sys.id}_#{locale}", index: entries }
  
  # A set of pipelines for updates received from a webhook calls to http://.../contentfulwebhook 
  # Handle publish of Entries
  -
   id: publish_entry_webhook 
-  inputs: 
+  when: 
    - {binding: contentfulWebhook }
-  tasks: 
+  do: 
    - {type: where, path: "headers.X-Contentful-Topic", equal: "ContentManagement.Entry.publish" }
    - {type: select, path: body }
    - {type: module, module: contentful, function: createNewEntryPerLocale }
-  outputs: 
+  to: 
    - {type: store, binding: content, key: "#{sys.id}_#{locale}", index: entries }
-  onSuccessWithResult: 
-   - {type: queue, topic: contentful_all_content_fetched }
+  then: 
+   - {type: queue, topic: contentful_all_content_fetched, empty:false }
  
  # Handle publish of Assets
  - 
   id: publish_asset_webhook 
-  inputs: 
+  when: 
    - {binding: contentfulWebhook }
-  tasks: 
+  do: 
    - {type: where, path: "headers.X-Contentful-Topic", equal: "ContentManagement.Asset.publish" }
    - {type: select, path: body }
-  outputs: 
+  to: 
    - {type: queue, topic: contentful_asset }
-  onSuccessWithResult: 
-   - {type: queue, topic: contentful_all_content_fetched }
+  then: 
+   - {type: queue, topic: contentful_all_content_fetched, empty:false }
  
  # Handle deletion of Entries
  - 
   id: unpublish_entry_webhook 
-  inputs: 
+  when: 
    - {binding: contentfulWebhook}
-  tasks: 
+  do: 
    - {type: where, path: "headers.X-Contentful-Topic", equal: "ContentManagement.Entry.unpublish"}
    - {type: select, path: body}
    - {type: delete, binding: content, key: "#{sys.id}_sv", index: entries }
    - {type: delete, binding: markdownoutput, key: "#{sys.id}.md" }
-  onSuccessWithResult: 
-   - {type: queue, topic: contentful_all_content_fetched}
+  then: 
+   - {type: queue, topic: contentful_all_content_fetched, empty:false}
  
  # Pipeline for download and storage of image assets
  -
   id: asset  
-  inputs: 
+  when: 
    - {binding: queue, topic: contentful_asset}
-  tasks: 
+  do: 
    - {type: module, module: contentful, function: createNewEntryPerLocale}
    - {type: store, binding: content, key: "#{sys.id}_#{locale}", index: assets}
    - {type: where, path: "fields.file.url", isnull: false }
    - {type: httpget, url: "http:#{fields.file.url}", format: binary }
-  outputs: 
+  to: 
    - {type: file, path: "/var/images", filename: "#{fields.file.fileName}"}
  
  # Pipeline for conversion to markdown
  -
   id: markdown 
   semaphore: 1
-  inputs: 
+  when: 
    - {binding: queue, topic: contentful_all_content_fetched }
-  tasks: 
+  from: 
    - {type: enumkeys, binding: content, index: entries }
+  do:
    - {type: module, module: hugo, function: formatEntry }
-  outputs: 
+  to: 
    - {type: store, binding: markdownoutput, key: "#{metadata:filename}" }

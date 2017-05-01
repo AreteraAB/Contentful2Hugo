@@ -12,7 +12,7 @@ services:
     command: ["/run.sh", "--appendPort=false"]
 
   contentaggregator:
-    image: aretera/contentaggregator:latest-sdk
+    image: aretera/foopipes:next-sdk
     volumes:
      - .:/project
      - ./hugo_src/content:/var/output

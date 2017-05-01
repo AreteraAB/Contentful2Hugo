@@ -1,14 +1,14 @@
 {
   "name": "Contentful2Hugo",
   "version": "1.0.0",
-  "description": "Contentful2Hugo using ContentAggregator",
+  "description": "Contentful2Hugo using Foopipes",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "contentaggregator": "^0.5.7",
+    "foopipes": "^0.6.2",
     "contentful": "^3.7.0"
   },
   "devDependencies": {

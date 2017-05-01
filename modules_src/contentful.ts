@@ -1,7 +1,7 @@
-﻿import * as contentaggregator from "contentaggregator";
+﻿import * as foopipes from "foopipes";
 var contentful = require('contentful'); 
 
-function getClient(context: contentaggregator.INodeContext) {
+function getClient(context: foopipes.ICallContext) {
     // Get args from the task 
     const spaceId = context.args["spaceId"];
     const accessToken = context.args["accessToken"];
@@ -20,10 +20,10 @@ function getClient(context: contentaggregator.INodeContext) {
  * If no sync token is present, it makes an "initial" sync.
  * When no more entities is received it fires the "contentful_all_content_fetched" event.
  */
-export async function fetchUpdates(mainCallback: (error, res) => void, event: Object, context: contentaggregator.INodeContext) {
+export async function fetchUpdates(event: Object, context: foopipes.ICallContext): Promise<foopipes.IResult>{
     const client = getClient(context);
 
-    const synctoken = await contentaggregator.bindValue(context, "#{content:ContentfulSyncToken}");
+    const synctoken = await foopipes.bindValue(context, "#{content:ContentfulSyncToken}");
     let syncResponse;
     if (synctoken == null || synctoken.length === 0) {
         console.log("Initial sync");
@@ -40,14 +40,14 @@ export async function fetchUpdates(mainCallback: (error, res) => void, event: Ob
     }
     console.log(`Got ${syncResponse.entries.length} entries, ${syncResponse.assets.length} assets, and nextSyncToken is ${syncResponse.nextSyncToken}`);
 
-    await contentaggregator.setValue(context, "content:ContentfulSyncToken", syncResponse.nextSyncToken);
+    await foopipes.setValue(context, "content:ContentfulSyncToken", syncResponse.nextSyncToken);
 
     if (syncResponse.entries.length > 0 || syncResponse.assets.length > 0) {
-        await contentaggregator.publish(context, "contentful_fetchupdates", {});
+        await foopipes.publish(context, "contentful_fetchupdates", {});
     } else {
-        await contentaggregator.publish(context, "contentful_all_content_fetched", {});        
+        await foopipes.publish(context, "contentful_all_content_fetched", {});        
     }
-    mainCallback(null, syncResponse);
+    return syncResponse;
 }
 
 /** 
@@ -86,10 +86,10 @@ export async function fetchUpdates(mainCallback: (error, res) => void, event: Ob
  *  "locale": "sv"
  * }
  */
-export function createNewEntryPerLocale(mainCallback: (error, res) => void, entryOrAsset: any, context: contentaggregator.INodeContext) {
+export function createNewEntryPerLocale(entryOrAsset: any, context: foopipes.ICallContext) {
     const entry = <EntryWithLocale>entryOrAsset;
     const arrayOfEntries = doCreateNewEntryPerLocale(entry);
-    mainCallback(null, new contentaggregator.ProcessJsonArrayResult(arrayOfEntries));
+    return new foopipes.ProcessJsonArrayResult(arrayOfEntries);
 }
 
 class EntryWithLocale

@@ -1,24 +1,23 @@
-﻿import * as contentaggregator from "contentaggregator";
+﻿import * as foopipes from "foopipes";
 
-export async function formatEntry(resultStream: contentaggregator.IBinaryResultStream, data: any, context: contentaggregator.INodeContext)
+export async function formatEntry(data: any, context: foopipes.ICallContext) : Promise<foopipes.IResult>
 {
-    try {
-        var key = data.key;
-        var entry = await contentaggregator.load(context, "content", "entries", "", key);
-        await contentaggregator.setValue(context, "metadata:filename", entry.sys.id + ".md");
+    const r = new foopipes.ProcessStreamResult(context);
 
-        resultStream.stream.write(JSON.stringify(entry, null, "\t"));
-        resultStream.stream.write("\n");
+    var key = data.key;
+    var entry = await foopipes.load(context, "content", "entries", "", key);
+    await foopipes.setValue(context, "metadata:filename", entry.sys.id + ".md");
 
-        const contentType = entry.sys.contentType.sys.id;
-        if (formatters[contentType]) {
-            await formatters[contentType](entry, resultStream.stream, context);
-        } else {
-            await formatters["default"](entry, resultStream.stream, context);
-        }
-    } finally {
-        resultStream.stream.end();
+    r.stream.write(JSON.stringify(entry, null, "\t"));
+    r.stream.write("\n");
+
+    const contentType = entry.sys.contentType.sys.id;
+    if (formatters[contentType]) {
+        await formatters[contentType](entry, r.stream, context);
+    } else {
+        await formatters["default"](entry, r.stream, context);
     }
+    return r;
 };
 
 
@@ -26,9 +25,9 @@ export async function formatEntry(resultStream: contentaggregator.IBinaryResultS
  * ** Markdown formatters **
  */
 
-async function formatImage(context: contentaggregator.INodeContext, field, locale) {
+async function formatImage(context: foopipes.ICallContext, field, locale) {
     var key = field.sys.id + "_" + locale;
-    var asset = await contentaggregator.load(context, "content", "assets", "", key);
+    var asset = await foopipes.load(context, "content", "assets", "", key);
 
     return `![${asset.fields.description}](/images/${asset.fields.file.fileName})\n`;
 }
@@ -57,7 +56,7 @@ var formatters = {
         stream.write(`# ${data.fields.headline} #\n`);
         stream.write(`${data.fields.preamble}\n` );
     },
-    "section": async function (data, stream, context) {
+    "section": async function (data, stream, context) : Promise<void> {
         stream.write(`# ${data.fields.headline} #\n`);
         stream.write(await formatImage(context, data.fields.imageUrl, data.locale));
         stream.write(`_${data.fields.preamble}_\n`);
