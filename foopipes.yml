@@ -44,7 +44,7 @@ pipelines:
   to: 
    - {type: store, binding: content, key: "#{sys.id}_#{locale}", index: entries }
   then: 
-   - {type: queue, topic: contentful_all_content_fetched, empty:false }
+   - {type: queue, topic: contentful_all_content_fetched, empty: false }
  
  # Handle publish of Assets
  - 
@@ -57,7 +57,7 @@ pipelines:
   to: 
    - {type: queue, topic: contentful_asset }
   then: 
-   - {type: queue, topic: contentful_all_content_fetched, empty:false }
+   - {type: queue, topic: contentful_all_content_fetched, empty: false }
  
  # Handle deletion of Entries
  - 
@@ -70,7 +70,7 @@ pipelines:
    - {type: delete, binding: content, key: "#{sys.id}_sv", index: entries }
    - {type: delete, binding: markdownoutput, key: "#{sys.id}.md" }
   then: 
-   - {type: queue, topic: contentful_all_content_fetched, empty:false}
+   - {type: queue, topic: contentful_all_content_fetched, empty: false}
  
  # Pipeline for download and storage of image assets
  -
