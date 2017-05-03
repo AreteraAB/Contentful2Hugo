@@ -6,7 +6,7 @@ Read more about Contentful CMS: http://contentful.com/
 
 Read more about Hugo static website generator: http://gohugo.io/
 
-Read more about Foopipes: https://bitbucket.org/aretera/foopipes
+Read more about Foopipes: http://foopipes.com/
 
 ## Quick start ##
 
