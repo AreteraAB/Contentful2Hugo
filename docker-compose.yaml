@@ -11,7 +11,7 @@ services:
      - HUGO_BASEURL=localhost
     command: ["/run.sh", "--appendPort=false"]
 
-  contentaggregator:
+  foopipes:
     image: aretera/foopipes:next-sdk
     volumes:
      - .:/project
@@ -35,8 +35,8 @@ services:
   ngrok:
      image: wernight/ngrok
      links: 
-      - contentaggregator
+      - foopipes
      ports:
       - 4040:4040
-     command: ["ngrok", "http", "contentaggregator:5000"]
+     command: ["ngrok", "http", "foopipes:5000"]
    
