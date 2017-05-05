@@ -12,7 +12,7 @@ services:
     command: ["/run.sh", "--appendPort=false"]
 
   foopipes:
-    image: aretera/foopipes:next-sdk
+    image: aretera/foopipes:latest-sdk
     volumes:
      - .:/project
      - ./hugo_src/content:/var/output
